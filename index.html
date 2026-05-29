@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WordVault · 背单词</title>
+  <style>
+    :root{
+      --bg:#f6f8fa;
+      --panel:#ffffff;
+      --panel-2:#f8fafc;
+      --text:#24292f;
+      --muted:#57606a;
+      --line:#d0d7de;
+      --line-2:#eaeef2;
+      --brand:#0969da;
+      --brand-2:#0550ae;
+      --ok:#1a7f37;
+      --warn:#9a6700;
+      --danger:#cf222e;
+      --shadow:0 1px 3px rgba(31,35,40,.08);
+      --radius:14px;
+      --radius-sm:10px;
+      --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:linear-gradient(180deg,#f8fafc 0%, #f6f8fa 100%);
+      color:var(--text);
+      font-family:var(--font);
+    }
+    a{color:var(--brand); text-decoration:none}
+    button,input,select,textarea{font:inherit}
+    .topbar{
+      position:sticky; top:0; z-index:20;
+      background:rgba(246,248,250,.92);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line);
+    }
+    .topbar-inner{
+      display:flex; align-items:center; gap:12px;
+      max-width:1480px; margin:0 auto; padding:14px 18px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px; min-width:210px;
+      font-weight:800; letter-spacing:.2px;
+    }
+    .brand-badge{
+      width:34px; height:34px; border-radius:10px;
+      display:grid; place-items:center;
+      background:linear-gradient(135deg,var(--brand),#2f81f7);
+      color:#fff; box-shadow:var(--shadow);
+    }
+    .toolbar{display:flex; gap:10px; align-items:center; flex:1; flex-wrap:wrap}
+    .searchbox{
+      flex:1; min-width:240px;
+      display:flex; gap:8px; align-items:center;
+      background:var(--panel); border:1px solid var(--line); border-radius:999px;
+      padding:8px 12px;
+    }
+    .searchbox input{
+      border:none; outline:none; background:transparent; width:100%;
+    }
+    .btn{
+      border:1px solid var(--line);
+      background:var(--panel);
+      color:var(--text);
+      border-radius:10px;
+      padding:9px 13px;
+      cursor:pointer;
+      transition:.15s ease;
+      box-shadow:0 1px 0 rgba(31,35,40,.04);
+    }
+    .btn:hover{transform:translateY(-1px); border-color:#b6c2cf}
+    .btn.primary{background:var(--brand); border-color:var(--brand); color:#fff}
+    .btn.primary:hover{background:var(--brand-2)}
+    .btn.ghost{background:transparent}
+    .btn.danger{border-color:#ffb3b3; color:var(--danger)}
+    .layout{
+      max-width:1480px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns: 310px 1fr;
+      gap:16px;
+      padding:16px 18px 28px;
+    }
+    .sidebar,.panel{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .sidebar{overflow:hidden; position:sticky; top:78px; height:calc(100vh - 100px)}
+    .sidebar-head,.panel-head{
+      padding:14px 14px 12px;
+      border-bottom:1px solid var(--line-2);
+      background:linear-gradient(180deg,#fff,#fbfcfd);
+    }
+    .sidebar-head h2,.panel-head h2,.panel-head h3{margin:0}
+    .sidebar-head p,.muted,.subtle{margin:6px 0 0; color:var(--muted); font-size:13px; line-height:1.5}
+    .book-list{
+      overflow:auto;
+      height:calc(100% - 70px);
+    }
+    .book-item{
+      padding:13px 14px;
+      border-bottom:1px solid var(--line-2);
+      cursor:pointer;
+      transition:.12s ease;
+    }
+    .book-item:hover{background:#f8fbff}
+    .book-item.active{background:#eef5ff}
+    .book-top{display:flex; justify-content:space-between; gap:10px; align-items:flex-start}
+    .book-name{font-weight:700}
+    .tag{
+      display:inline-flex; align-items:center; gap:6px;
+      font-size:12px; padding:4px 8px; border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .tag.normal{color:#0f62fe; border-color:#cfe2ff; background:#f5faff}
+    .tag.advanced{color:#8250df; border-color:#e6d9ff; background:#faf7ff}
+    .tag.ok{color:var(--ok); border-color:#c8e6c9; background:#f2fbf3}
+    .tag.warn{color:var(--warn); border-color:#ffe2a8; background:#fffaf0}
+    .book-meta{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap}
+    .tabs{
+      display:flex; gap:8px; padding:14px; border-bottom:1px solid var(--line-2);
+      flex-wrap:wrap;
+    }
+    .tab{
+      padding:9px 14px; border-radius:999px; border:1px solid var(--line);
+      background:#fff; cursor:pointer;
+    }
+    .tab.active{background:#111827; color:#fff; border-color:#111827}
+    .content{display:grid; gap:16px}
+    .grid-2{display:grid; grid-template-columns: 1.1fr .9fr; gap:16px}
+    .grid-3{display:grid; grid-template-columns: repeat(3,1fr); gap:14px}
+    .card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card-body{padding:16px}
+    .stat{
+      padding:14px; border:1px solid var(--line); border-radius:14px; background:#fff;
+    }
+    .stat .v{font-size:26px; font-weight:800; margin-top:4px}
+    .split{
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap
+    }
+    .title{font-size:20px; font-weight:800; margin:0}
+    .section-title{font-size:16px; font-weight:800; margin:0}
+    .textarea,.input,select{
+      width:100%; border:1px solid var(--line); border-radius:12px; padding:10px 12px;
+      background:#fff; outline:none;
+    }
+    .textarea{min-height:240px; resize:vertical; line-height:1.6}
+    .textarea.small{min-height:120px}
+    .input-row{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .note{font-size:12px; color:var(--muted)}
+    .list{display:grid; gap:10px}
+    .word-row{
+      display:grid; grid-template-columns: 1fr auto auto;
+      gap:10px; align-items:center;
+      padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:#fff;
+    }
+    .word-row.advanced{grid-template-columns:1fr 1fr 1fr auto}
+    .word-row .mono{font-weight:700}
+    .badge-mini{
+      display:inline-flex; align-items:center; padding:3px 8px; border-radius:999px;
+      background:#f6f8fa; border:1px solid var(--line); color:var(--muted); font-size:12px;
+    }
+    .hero{
+      display:grid; gap:16px;
+    }
+    .study-box{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:linear-gradient(180deg,#fff,#fbfcfd);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+    .flash{
+      min-height:250px;
+      border:1px dashed #cbd5e1;
+      border-radius:18px;
+      background:linear-gradient(180deg,#fff,#f8fafc);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      padding:24px;
+      text-align:center;
+      gap:12px;
+    }
+    .flash .term{font-size:42px; font-weight:900; letter-spacing:.5px}
+    .flash .phonetic{font-size:15px; color:var(--muted)}
+    .flash .meaning{max-width:760px; line-height:1.8; color:var(--text)}
+    .flash .example{max-width:760px; font-size:13px; color:var(--muted)}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center}
+    .review-btn{min-width:92px}
+    .review-btn.again{color:var(--danger)}
+    .review-btn.hard{color:var(--warn)}
+    .review-btn.good{color:var(--ok)}
+    .review-btn.easy{color:var(--brand)}
+    .progress{
+      display:grid; grid-template-columns:repeat(4,1fr); gap:12px;
+    }
+    .progress .box{
+      border:1px solid var(--line); border-radius:14px; padding:12px; background:#fff;
+    }
+    .box .k{color:var(--muted); font-size:12px}
+    .box .n{font-size:21px; font-weight:800; margin-top:4px}
+    .dictionary{
+      display:grid; gap:12px;
+    }
+    .dict-head{
+      display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap
+    }
+    .dict-title{font-size:28px; font-weight:900; margin:0}
+    .dict-phonetic{color:var(--muted); margin-top:6px}
+    .meaning-item{
+      padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:#fff;
+    }
+    .meaning-item + .meaning-item{margin-top:10px}
+    .meaning-item .pos{font-weight:800; color:var(--brand)}
+    .examples{margin-top:8px; color:var(--muted); font-size:13px; line-height:1.7}
+    .divider{height:1px; background:var(--line-2); margin:14px 0}
+    .empty{
+      padding:26px; border:1px dashed var(--line); border-radius:14px; color:var(--muted);
+      text-align:center; background:#fff;
+    }
+    .toast{
+      position:fixed; right:18px; bottom:18px; background:#111827; color:#fff;
+      padding:12px 14px; border-radius:12px; box-shadow:0 18px 30px rgba(0,0,0,.15);
+      max-width:340px; display:none; z-index:60;
+    }
+    .modal{
+      position:fixed; inset:0; background:rgba(15,23,42,.45);
+      display:none; align-items:center; justify-content:center; padding:16px; z-index:50;
+    }
+    .modal.open{display:flex}
+    .modal-card{
+      width:min(980px,100%);
+      max-height:92vh;
+      overflow:auto;
+      background:#fff; border-radius:20px; border:1px solid var(--line);
+      box-shadow:0 24px 70px rgba(0,0,0,.22);
+    }
+    .modal-head{
+      display:flex; justify-content:space-between; gap:12px; align-items:flex-start;
+      padding:16px 18px; border-bottom:1px solid var(--line-2);
+    }
+    .modal-body{padding:18px}
+    .modal-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+    .checklist{display:grid; gap:10px}
+    .check{
+      display:flex; gap:10px; align-items:center;
+      border:1px solid var(--line); border-radius:12px; padding:10px 12px; background:#fff;
+    }
+    .check input{width:18px; height:18px}
+    .footer-line{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap}
+    .small{font-size:12px}
+    .hidden{display:none !important}
+    @media (max-width: 1100px){
+      .layout{grid-template-columns:1fr}
+      .sidebar{position:relative; top:auto; height:auto}
+      .grid-2,.modal-grid,.progress,.grid-3{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-badge">W</div>
+        <div>
+          <div>WordVault</div>
+          <div class="muted">GitHub 同步 · Cloudflare 运行</div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="searchbox">
+          <span>⌕</span>
+          <input id="globalSearch" placeholder="搜词 / 搜单词本 / 搜释义" />
+        </div>
+        <button class="btn" id="refreshBtn">刷新</button>
+        <button class="btn primary" id="openCreateBtn">新建单词本</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <h2>单词本</h2>
+        <p>普通单词本是 txt；高级单词本保存特定释义与笔记。</p>
+      </div>
+      <div class="book-list" id="bookList"></div>
+    </aside>
+
+    <main class="content">
+      <div class="tabs">
+        <button class="tab active" data-tab="dashboard">概览</button>
+        <button class="tab" data-tab="study">背单词</button>
+        <button class="tab" data-tab="search">搜词</button>
+        <button class="tab" data-tab="manage">编辑/导入</button>
+      </div>
+
+      <section class="card" id="dashboardTab">
+        <div class="panel-head">
+          <div class="split">
+            <div>
+              <h2 class="title">总览</h2>
+              <p class="muted">左侧选择单词本，右侧完成搜索、背诵和编辑。</p>
+            </div>
+            <div class="footer-line">
+              <span class="tag ok" id="syncState">未连接</span>
+              <span class="tag" id="repoState">GitHub Repo</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="grid-3">
+            <div class="stat"><div class="k">单词本数量</div><div class="v" id="statBooks">0</div></div>
+            <div class="stat"><div class="k">普通单词本</div><div class="v" id="statNormal">0</div></div>
+            <div class="stat"><div class="k">高级单词本</div><div class="v" id="statAdvanced">0</div></div>
+          </div>
+          <div class="divider"></div>
+          <div class="grid-2">
+            <div class="study-box">
+              <div class="split">
+                <div>
+                  <h3 class="section-title">最近选择</h3>
+                  <p class="subtle" id="activeBookInfo">尚未选择单词本</p>
+                </div>
+                <div class="tag" id="activeBookType">—</div>
+              </div>
+              <div class="divider"></div>
+              <div id="activeBookPreview" class="empty">点击左侧单词本后会在这里显示内容。</div>
+            </div>
+            <div class="study-box">
+              <div class="split">
+                <div>
+                  <h3 class="section-title">今日进度</h3>
+                  <p class="subtle">按 SM-2 思路做了一个简化版复习调度。</p>
+                </div>
+              </div>
+              <div class="progress" id="progressBoxes"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card hidden" id="studyTab">
+        <div class="panel-head">
+          <div class="split">
+            <div>
+              <h2 class="title">背单词</h2>
+              <p class="muted">选择单词本后开始复习；普通单词本会在翻卡时拉取在线释义与例句，高级单词本只展示你自定义的内容。</p>
+            </div>
+            <div class="footer-line">
+              <select id="studyBookSelect" class="input" style="min-width:260px"></select>
+              <button class="btn primary" id="startStudyBtn">开始</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body hero">
+          <div class="study-box">
+            <div class="flash" id="flashCard">
+              <div class="term">选择一本单词本</div>
+              <div class="phonetic">开始后会在这里显示单词</div>
+              <div class="meaning">你可以在下方点击“Again / Hard / Good / Easy”完成复习。</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn review-btn again" data-grade="1">Again</button>
+            <button class="btn review-btn hard" data-grade="2">Hard</button>
+            <button class="btn review-btn good" data-grade="3">Good</button>
+            <button class="btn review-btn easy" data-grade="4">Easy</button>
+          </div>
+          <div class="split">
+            <div class="subtle" id="studyHint">未开始</div>
+            <div class="subtle" id="studyStats">0 / 0</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card hidden" id="searchTab">
+        <div class="panel-head">
+          <div class="split">
+            <div>
+              <h2 class="title">搜词</h2>
+              <p class="muted">默认走在线词典接口；下方会同步显示这个词是否已经出现在任何高级单词本中。</p>
+            </div>
+            <div class="footer-line">
+              <input id="searchInput" class="input" placeholder="输入单词或词组" style="min-width:260px" />
+              <button class="btn primary" id="searchBtn">搜索</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="searchResult" class="dictionary empty">输入一个单词开始搜索。</div>
+        </div>
+      </section>
+
+      <section class="card hidden" id="manageTab">
+        <div class="panel-head">
+          <div class="split">
+            <div>
+              <h2 class="title">编辑 / 导入 / 创建</h2>
+              <p class="muted">普通单词本可直接编辑 txt；高级单词本可编辑“单词、特定释义、笔记”。</p>
+            </div>
+            <div class="footer-line">
+              <label class="btn">
+                导入普通 txt
+                <input id="importTxt" type="file" accept=".txt,text/plain" class="hidden" />
+              </label>
+              <button class="btn primary" id="saveBookBtn">保存当前单词本</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="split">
+            <div>
+              <h3 class="section-title" id="editorTitle">未选择单词本</h3>
+              <p class="subtle" id="editorSub">选择一个单词本后编辑其内容。</p>
+            </div>
+            <div class="footer-line">
+              <button class="btn" id="addRowBtn">添加一行</button>
+              <button class="btn danger" id="deleteBookBtn">删除单词本</button>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div id="editorArea">
+            <div class="empty">选择单词本后开始编辑。</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="createModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h3 class="title">新建单词本</h3>
+          <p class="subtle">普通单词本：只保留 txt 中的单词。高级单词本：每条包含单词/词组、特定释义、笔记。</p>
+        </div>
+        <button class="btn" data-close="createModal">关闭</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-grid">
+          <div>
+            <label class="note">单词本名称</label>
+            <input id="newBookName" class="input" placeholder="例如：四级高频词" />
+            <div style="height:12px"></div>
+            <label class="note">类型</label>
+            <select id="newBookType" class="input">
+              <option value="normal">普通单词本</option>
+              <option value="advanced">高级单词本</option>
+            </select>
+            <div style="height:12px"></div>
+            <label class="note">导入普通 txt（可选）</label>
+            <input id="newBookFile" type="file" accept=".txt,text/plain" class="input" />
+            <p class="note">若选择普通单词本并上传 txt，系统会按行导入；若不上传，将创建空本。</p>
+          </div>
+          <div>
+            <label class="note">高级单词本初始内容（可选，JSON）</label>
+            <textarea id="newBookJson" class="textarea small" placeholder='[{"term":"abandon","definitions":["放弃"],"note":"常考动词"}]'></textarea>
+            <p class="note">不熟悉 JSON 也没关系：先建空本，再在编辑区逐行添加。</p>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <button class="btn primary" id="createBookBtn">创建</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="collectModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h3 class="title">收藏到单词本</h3>
+          <p class="subtle" id="collectWordInfo">—</p>
+        </div>
+        <button class="btn" data-close="collectModal">关闭</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-grid">
+          <div>
+            <label class="note">选择目标单词本（可多选）</label>
+            <div id="collectBookList" class="checklist"></div>
+          </div>
+          <div id="collectAdvancedPanel">
+            <label class="note">可收藏的释义</label>
+            <div id="collectMeaningList" class="checklist"></div>
+            <div style="height:12px"></div>
+            <label class="note">额外自定义释义</label>
+            <input id="collectCustomDef" class="input" placeholder="例如：公司治理中的放弃控制权" />
+            <div style="height:12px"></div>
+            <label class="note">笔记</label>
+            <textarea id="collectNote" class="textarea small" placeholder="例如：常与 to / doing 搭配"></textarea>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="footer-line">
+          <p class="note">普通单词本只会保存单词；高级单词本会保存你选中的释义、额外释义和笔记。</p>
+          <button class="btn primary" id="confirmCollectBtn">确认收藏</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="rawModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h3 class="title" id="rawModalTitle">编辑条目</h3>
+          <p class="subtle">这里适合做精细编辑。</p>
+        </div>
+        <button class="btn" data-close="rawModal">关闭</button>
+      </div>
+      <div class="modal-body">
+        <div id="rawModalBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+const API = '/api';
+const state = {
+  books: [],
+  activeBookId: '',
+  activeBook: null,
+  activeBookData: null,
+  studyBookId: '',
+  studyDeck: [],
+  studyIndex: 0,
+  studyReveal: false,
+  searchData: null,
+  collectWord: '',
+  collectDict: null,
+  collectMode: 'search',
+};
+
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => [...document.querySelectorAll(sel)];
+const now = () => Date.now();
+const uid = (prefix='bk') => `${prefix}_${Math.random().toString(36).slice(2,8)}_${Date.now().toString(36)}`;
+const esc = (s='') => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const normalize = (s='') => s.trim().toLowerCase();
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+function toast(msg, ms=2200){
+  const el = $('#toast');
+  el.textContent = msg;
+  el.style.display='block';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=> el.style.display='none', ms);
+}
+
+async function api(path, opts={}){
+  const res = await fetch(API + path, {
+    headers: {'Content-Type':'application/json', ...(opts.headers||{})},
+    ...opts
+  });
+  const text = await res.text();
+  let data = null;
+  try{ data = text ? JSON.parse(text) : null; }catch{ data = text; }
+  if(!res.ok) throw new Error((data && data.error) ? data.error : text || `HTTP ${res.status}`);
+  return data;
+}
+
+function setTab(name){
+  ['dashboard','study','search','manage'].forEach(t=>{
+    $('#'+t+'Tab').classList.toggle('hidden', t!==name);
+    document.querySelector(`.tab[data-tab="${t}"]`).classList.toggle('active', t===name);
+  });
+}
+
+$$('.tab').forEach(btn => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
+
+$('#refreshBtn').addEventListener('click', bootstrap);
+$('#openCreateBtn').addEventListener('click', ()=> openModal('createModal'));
+$$('[data-close]').forEach(btn => btn.addEventListener('click', ()=> closeModal(btn.dataset.close)));
+window.addEventListener('keydown', e => {
+  if(e.key === 'Escape'){ ['createModal','collectModal','rawModal'].forEach(closeModal); }
+});
+
+$('#globalSearch').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){
+    const q = e.target.value.trim();
+    if(!q) return;
+    setTab('search');
+    $('#searchInput').value = q;
+    searchWord(q);
+  }
+});
+$('#searchBtn').addEventListener('click', ()=> searchWord($('#searchInput').value.trim()));
+$('#searchInput').addEventListener('keydown', e => e.key==='Enter' && searchWord($('#searchInput').value.trim()));
+
+$('#createBookBtn').addEventListener('click', createBook);
+$('#importTxt').addEventListener('change', async e => {
+  const file = e.target.files?.[0];
+  if(!file) return;
+  const text = await file.text();
+  const name = file.name.replace(/\.txt$/i,'');
+  $('#newBookName').value = $('#newBookName').value || name;
+  $('#newBookType').value = 'normal';
+  $('#newBookFile')._fileText = text;
+  openModal('createModal');
+  toast('已读取 txt，点击创建即可导入。');
+});
+$('#saveBookBtn').addEventListener('click', saveActiveBook);
+$('#deleteBookBtn').addEventListener('click', deleteActiveBook);
+$('#addRowBtn').addEventListener('click', addEditorRow);
+$('#startStudyBtn').addEventListener('click', startStudy);
+$$('.review-btn').forEach(btn => btn.addEventListener('click', ()=> reviewCard(+btn.dataset.grade)));
+$('#confirmCollectBtn').addEventListener('click', confirmCollect);
+
+function openModal(id){ $('#'+id).classList.add('open'); }
+function closeModal(id){ $('#'+id).classList.remove('open'); }
+
+function renderRepoState(ok=true){
+  $('#syncState').textContent = ok ? '已连接' : '未连接';
+  $('#syncState').className = 'tag ' + (ok ? 'ok' : 'warn');
+}
+
+function setActiveBook(id){
+  state.activeBookId = id;
+  state.studyBookId = state.studyBookId || id;
+  renderBooks();
+  loadBook(id);
+  $('#studyBookSelect').value = id;
+}
+
+function bookLabel(b){
+  return `${b.name}${b.type==='normal' ? ' · txt' : ' · 高级'}`;
+}
+
+function bookCount(b){
+  if(typeof b.count === 'number') return b.count;
+  return 0;
+}
+
+function renderBooks(){
+  const wrap = $('#bookList');
+  const select = $('#studyBookSelect');
+  wrap.innerHTML = '';
+  select.innerHTML = '';
+  if(!state.books.length){
+    wrap.innerHTML = '<div class="empty" style="margin:14px">还没有单词本，先新建一个。</div>';
+    select.innerHTML = '<option value="">无单词本</option>';
+  }
+  state.books.forEach(b => {
+    const div = document.createElement('div');
+    div.className = 'book-item' + (b.id === state.activeBookId ? ' active' : '');
+    div.innerHTML = `
+      <div class="book-top">
+        <div>
+          <div class="book-name">${esc(b.name)}</div>
+          <div class="muted small">${esc(b.id)}</div>
+        </div>
+        <span class="tag ${b.type}">${b.type === 'normal' ? '普通' : '高级'}</span>
+      </div>
+      <div class="book-meta">
+        <span class="badge-mini">${bookCount(b)} 条</span>
+        <span class="badge-mini">${b.updatedAt ? new Date(b.updatedAt).toLocaleString() : '未更新'}</span>
+      </div>`;
+    div.addEventListener('click', ()=> setActiveBook(b.id));
+    wrap.appendChild(div);
+
+    const opt = document.createElement('option');
+    opt.value = b.id;
+    opt.textContent = `${b.name} (${b.type==='normal'?'普通':'高级'})`;
+    select.appendChild(opt);
+  });
+  if(state.studyBookId) select.value = state.studyBookId;
+  $('#statBooks').textContent = state.books.length;
+  $('#statNormal').textContent = state.books.filter(b=>b.type==='normal').length;
+  $('#statAdvanced').textContent = state.books.filter(b=>b.type==='advanced').length;
+  $('#repoState').textContent = state.books.length ? 'GitHub 数据已加载' : '空仓库';
+  if(state.activeBook){
+    const b = state.activeBook;
+    $('#activeBookInfo').textContent = `${b.name} · ${b.id}`;
+    $('#activeBookType').textContent = b.type === 'normal' ? '普通单词本' : '高级单词本';
+    $('#activeBookType').className = 'tag ' + b.type;
+    $('#activeBookPreview').innerHTML = renderBookPreview(b);
+  }else{
+    $('#activeBookInfo').textContent = '尚未选择单词本';
+    $('#activeBookType').textContent = '—';
+    $('#activeBookType').className = 'tag';
+    $('#activeBookPreview').innerHTML = '<div class="empty">点击左侧单词本后会在这里显示内容。</div>';
+  }
+  renderProgressBoxes();
+}
+
+function renderProgressBoxes(){
+  const box = $('#progressBoxes');
+  const book = state.activeBookData;
+  if(!book || !book.progress){
+    box.innerHTML = `
+      <div class="box"><div class="k">待复习</div><div class="n">0</div></div>
+      <div class="box"><div class="k">新词</div><div class="n">0</div></div>
+      <div class="box"><div class="k">已掌握</div><div class="n">0</div></div>
+      <div class="box"><div class="k">总词数</div><div class="n">0</div></div>`;
+    return;
+  }
+  const items = getBookItems(book);
+  const due = items.filter(x => isDue(x, book.progress)).length;
+  const learned = items.filter(x => (book.progress[x.key] || {}).interval >= 7).length;
+  const newWords = items.filter(x => !book.progress[x.key]).length;
+  box.innerHTML = `
+    <div class="box"><div class="k">待复习</div><div class="n">${due}</div></div>
+    <div class="box"><div class="k">新词</div><div class="n">${newWords}</div></div>
+    <div class="box"><div class="k">已掌握</div><div class="n">${learned}</div></div>
+    <div class="box"><div class="k">总词数</div><div class="n">${items.length}</div></div>`;
+}
+
+function renderBookPreview(b){
+  if(b.type === 'normal'){
+    const words = (b.previewWords || []).slice(0,18);
+    return words.length ? `
+      <div class="list">
+        ${words.map(w => `<div class="word-row"><div class="mono">${esc(w)}</div><span class="badge-mini">word</span></div>`).join('')}
+      </div>` : '<div class="empty">普通单词本中还没有单词。</div>';
+  }
+  const items = (b.previewItems || []).slice(0,8);
+  return items.length ? `
+    <div class="list">
+      ${items.map(x => `
+        <div class="word-row advanced">
+          <div><div class="mono">${esc(x.term)}</div><div class="small muted">${esc((x.definitions||[]).join('；'))}</div></div>
+          <div class="small muted">${esc(x.note || '')}</div>
+          <div><span class="badge-mini">高级</span></div>
+        </div>`).join('')}
+    </div>` : '<div class="empty">高级单词本中还没有条目。</div>';
+}
+
+async function bootstrap(){
+  try{
+    renderRepoState(false);
+    const data = await api('/books');
+    state.books = data.books || [];
+    state.activeBook = state.books[0] || null;
+    if(state.activeBookId && !state.books.some(b=>b.id===state.activeBookId)){
+      state.activeBookId = state.activeBook?.id || '';
+    }
+    if(!state.activeBookId && state.activeBook) state.activeBookId = state.activeBook.id;
+    if(!state.studyBookId && state.activeBookId) state.studyBookId = state.activeBookId;
+    renderBooks();
+    if(state.activeBookId){
+      await loadBook(state.activeBookId, false);
+      $('#studyBookSelect').value = state.studyBookId;
+    }
+    renderRepoState(true);
+  }catch(err){
+    console.error(err);
+    renderRepoState(false);
+    toast('加载失败：' + err.message, 3400);
+    $('#bookList').innerHTML = `<div class="empty" style="margin:14px">加载失败：${esc(err.message)}</div>`;
+  }
+}
+
+async function loadBook(id, silent=true){
+  if(!id) return;
+  try{
+    const data = await api(`/books/${encodeURIComponent(id)}`);
+    state.activeBook = data.book;
+    state.activeBookData = data;
+    renderBooks();
+    renderEditor();
+    renderStudyInfo();
+  }catch(err){
+    if(!silent) toast('读取单词本失败：' + err.message);
+  }
+}
+
+function getBookItems(bookData){
+  if(!bookData) return [];
+  if(bookData.book?.type === 'normal'){
+    const words = bookData.words || [];
+    return words.map(w => ({ key: normalize(w), term: w }));
+  }
+  const items = bookData.items || [];
+  return items.map((x, idx) => ({ key: normalize(x.term || x.word || `item_${idx}`), ...x, term: x.term || x.word || '' }));
+}
+
+function isDue(item, progress){
+  const p = progress?.[item.key];
+  if(!p) return true;
+  return !p.dueAt || p.dueAt <= now();
+}
+
+function renderStudyInfo(){
+  const book = state.activeBookData;
+  if(!book){
+    $('#studyHint').textContent = '未选择';
+    $('#studyStats').textContent = '0 / 0';
+    $('#flashCard').innerHTML = `
+      <div class="term">选择一本单词本</div>
+      <div class="phonetic">开始后会在这里显示单词</div>
+      <div class="meaning">你可以在下方点击“Again / Hard / Good / Easy”完成复习。</div>`;
+    return;
+  }
+  const b = book.book;
+  $('#studyHint').textContent = `当前：${b.name} · ${b.type === 'normal' ? '普通' : '高级'}`;
+  const items = getBookItems(book);
+  const due = items.filter(x => isDue(x, book.progress)).length;
+  $('#studyStats').textContent = `${due} / ${items.length}`;
+}
+
+function makeDeck(bookData){
+  const items = getBookItems(bookData);
+  const progress = bookData.progress || {};
+  const due = [];
+  const fresh = [];
+  items.forEach(it => {
+    if(isDue(it, progress)) due.push(it);
+    else fresh.push(it);
+  });
+  // due first, then fresh
+  const shuffle = arr => arr.sort(()=>Math.random()-0.5);
+  return [...shuffle(due), ...shuffle(fresh)];
+}
+
+async function startStudy(){
+  const id = $('#studyBookSelect').value;
+  if(!id){ toast('请选择一本单词本'); return; }
+  state.studyBookId = id;
+  await loadBook(id);
+  state.studyDeck = makeDeck(state.activeBookData);
+  state.studyIndex = 0;
+  state.studyReveal = false;
+  showCurrentCard();
+  toast('已开始');
+}
+
+function currentItem(){
+  return state.studyDeck[state.studyIndex];
+}
+
+function showCurrentCard(){
+  const bookData = state.activeBookData;
+  const item = currentItem();
+  $('#studyStats').textContent = `${Math.min(state.studyIndex + (item ? 1 : 0), state.studyDeck.length)} / ${state.studyDeck.length}`;
+  if(!bookData || !item){
+    $('#flashCard').innerHTML = `
+      <div class="term">没有可复习的内容</div>
+      <div class="phonetic">试试切换单词本或添加新词</div>
+      <div class="meaning">—</div>`;
+    return;
+  }
+  const b = bookData.book;
+  if(b.type === 'normal'){
+    $('#flashCard').innerHTML = `
+      <div class="term">${esc(item.term)}</div>
+      <div class="phonetic">点击任意处翻开释义</div>
+      <div class="meaning">${state.studyReveal ? '加载中...' : '普通单词本会从在线词典获取释义、英音发音和例句。'}</div>`;
+  }else{
+    $('#flashCard').innerHTML = `
+      <div class="term">${esc(item.term)}</div>
+      <div class="phonetic">高级单词本</div>
+      <div class="meaning">${state.studyReveal ? renderAdvancedMeaning(item) : '点击任意处翻开你自定义的特定释义和笔记。'}</div>`;
+  }
+  $('#flashCard').onclick = () => revealCard();
+}
+
+async function revealCard(){
+  const bookData = state.activeBookData;
+  const item = currentItem();
+  if(!bookData || !item) return;
+  state.studyReveal = true;
+  const b = bookData.book;
+  if(b.type === 'normal'){
+    $('#flashCard').innerHTML = `
+      <div class="term">${esc(item.term)}</div>
+      <div class="phonetic">正在查询在线词典…</div>
+      <div class="meaning">加载中</div>`;
+    try{
+      const d = await api(`/dict?q=${encodeURIComponent(item.term)}`);
+      state.currentDict = d;
+      $('#flashCard').innerHTML = renderDictCard(item.term, d);
+    }catch(err){
+      $('#flashCard').innerHTML = `
+        <div class="term">${esc(item.term)}</div>
+        <div class="phonetic">未查到释义</div>
+        <div class="meaning">${esc(err.message)}</div>`;
+    }
+  }else{
+    $('#flashCard').innerHTML = `
+      <div class="term">${esc(item.term)}</div>
+      <div class="phonetic">高级单词本</div>
+      <div class="meaning">${renderAdvancedMeaning(item)}</div>`;
+  }
+}
+
+function renderDictCard(term, d){
+  const phon = d.phonetic || (d.phonetics || []).find(x => x.text)?.text || '';
+  const meanings = (d.meanings || []).map(m => `
+    <div class="meaning-item">
+      <div class="pos">${esc(m.partOfSpeech || '')}</div>
+      <div style="margin-top:6px">${esc(m.definition || '')}</div>
+      ${m.example ? `<div class="examples">例句：${esc(m.example)}</div>` : ''}
+    </div>
+  `).join('');
+  return `
+    <div class="term">${esc(term)}</div>
+    <div class="phonetic">${esc(phon || '无音标')}</div>
+    <div class="meaning">${meanings || '未找到释义'}</div>
+    ${d.audio ? `<audio controls src="${esc(d.audio)}" style="width:100%; margin-top:8px"></audio>` : ''}
+  `;
+}
+
+function renderAdvancedMeaning(item){
+  const defs = (item.definitions || item.definition ? [item.definition].flat() : []).filter(Boolean);
+  const notes = item.note || '';
+  return `
+    <div style="text-align:left; width:100%">
+      <div><strong>特定释义：</strong>${defs.length ? defs.map(esc).join('；') : '无'}</div>
+      <div style="margin-top:10px"><strong>笔记：</strong>${esc(notes || '无')}</div>
+    </div>
+  `;
+}
+
+async function reviewCard(grade){
+  const bookData = state.activeBookData;
+  const item = currentItem();
+  if(!bookData || !item){
+    toast('请先开始背诵');
+    return;
+  }
+  const progress = bookData.progress || {};
+  const key = item.key;
+  const p = progress[key] || { ease: 2.5, interval: 0, repetitions: 0, lapses: 0, seen: 0, correct: 0 };
+  p.seen = (p.seen || 0) + 1;
+
+  const day = 24 * 60 * 60 * 1000;
+  const min10 = 10 * 60 * 1000;
+  const min30 = 30 * 60 * 1000;
+  const oneDay = day;
+
+  if(grade === 1){
+    p.lapses = (p.lapses || 0) + 1;
+    p.repetitions = 0;
+    p.interval = 0;
+    p.ease = Math.max(1.3, (p.ease || 2.5) - 0.2);
+    p.dueAt = now() + min10;
+  }else if(grade === 2){
+    p.repetitions = Math.max(0, (p.repetitions || 0));
+    p.interval = Math.max(1, Math.round((p.interval || 1) * 1.2));
+    p.ease = Math.max(1.3, (p.ease || 2.5) - 0.05);
+    p.dueAt = now() + oneDay;
+  }else if(grade === 3){
+    p.correct = (p.correct || 0) + 1;
+    p.repetitions = (p.repetitions || 0) + 1;
+    p.interval = p.interval ? Math.max(1, Math.round(p.interval * (p.ease || 2.5))) : 1;
+    p.ease = Math.min(3.0, (p.ease || 2.5) + 0.05);
+    p.dueAt = now() + p.interval * oneDay;
+  }else{
+    p.correct = (p.correct || 0) + 1;
+    p.repetitions = (p.repetitions || 0) + 1;
+    p.interval = p.interval ? Math.max(2, Math.round(p.interval * (p.ease || 2.5) * 1.3)) : 4;
+    p.ease = Math.min(3.2, (p.ease || 2.5) + 0.15);
+    p.dueAt = now() + p.interval * oneDay;
+  }
+  progress[key] = p;
+  bookData.progress = progress;
+  await api(`/books/${encodeURIComponent(bookData.book.id)}/progress`, {method:'PUT', body: JSON.stringify({progress})});
+  toast(['已标记 Again','已标记 Hard','已标记 Good','已标记 Easy'][grade-1]);
+  // move to next
+  state.studyIndex += 1;
+  state.studyReveal = false;
+  if(state.studyIndex >= state.studyDeck.length){
+    state.studyDeck = makeDeck(bookData);
+    state.studyIndex = 0;
+  }
+  await loadBook(bookData.book.id, true);
+  showCurrentCard();
+}
+
+function renderSearchResult(data){
+  if(!data){
+    $('#searchResult').innerHTML = '<div class="empty">输入一个单词开始搜索。</div>';
+    return;
+  }
+  const dict = data.dict || {};
+  const matches = data.matches || [];
+  const phon = dict.phonetic || '';
+  const meanings = (dict.meanings || []).map(m => `
+    <div class="meaning-item">
+      <div class="pos">${esc(m.partOfSpeech || '')}</div>
+      <div style="margin-top:6px">${esc(m.definition || '')}</div>
+      ${m.example ? `<div class="examples">例句：${esc(m.example)}</div>` : ''}
+    </div>
+  `).join('');
+  const collected = matches.length ? matches.map(m => `
+    <div class="meaning-item">
+      <div class="pos">${esc(m.bookName)}</div>
+      <div style="margin-top:6px">${esc((m.definitions || []).join('；') || '无特定释义')}</div>
+      ${m.note ? `<div class="examples">笔记：${esc(m.note)}</div>` : ''}
+    </div>
+  `).join('') : '<div class="empty">这个词还没有出现在任何高级单词本中。</div>';
+  $('#searchResult').innerHTML = `
+    <div class="dict-head">
+      <div>
+        <h2 class="dict-title">${esc(dict.word || data.query || '')}</h2>
+        <div class="dict-phonetic">${esc(phon || '无音标')}</div>
+      </div>
+      <div class="footer-line">
+        <button class="btn" id="collectBtn">收藏</button>
+        ${dict.audio ? `<audio controls src="${esc(dict.audio)}"></audio>` : ''}
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div>${meanings || '<div class="empty">未找到释义</div>'}</div>
+    <div class="divider"></div>
+    <h3 class="section-title">在高级单词本中的记录</h3>
+    <div style="height:10px"></div>
+    <div class="list">${collected}</div>
+  `;
+  $('#collectBtn')?.addEventListener('click', ()=> openCollectModal(data));
+}
+
+async function searchWord(q){
+  q = q.trim();
+  if(!q) return toast('请输入单词');
+  $('#searchResult').innerHTML = '<div class="empty">搜索中…</div>';
+  try{
+    const data = await api(`/search?q=${encodeURIComponent(q)}`);
+    state.searchData = data;
+    renderSearchResult(data);
+  }catch(err){
+    $('#searchResult').innerHTML = `<div class="empty">搜索失败：${esc(err.message)}</div>`;
+  }
+}
+
+function openCollectModal(data){
+  state.collectWord = data.query;
+  state.collectDict = data.dict;
+  $('#collectWordInfo').textContent = data.query;
+  const books = state.books;
+  $('#collectBookList').innerHTML = books.map(b => `
+    <label class="check">
+      <input type="checkbox" value="${esc(b.id)}" data-type="${esc(b.type)}" />
+      <div>
+        <div><strong>${esc(b.name)}</strong> <span class="tag ${b.type}">${b.type==='normal'?'普通':'高级'}</span></div>
+        <div class="small muted">${esc(b.id)}</div>
+      </div>
+    </label>
+  `).join('');
+  const meanings = (data.dict?.meanings || []).flatMap(m => (m.examples?.length ? m.examples : []));
+  const allDefs = [];
+  (data.dict?.meanings || []).forEach(m => {
+    if(m.definition) allDefs.push({label: `${m.partOfSpeech || ''} · ${m.definition}`, value: m.definition});
+  });
+  $('#collectMeaningList').innerHTML = allDefs.length ? allDefs.map((m, idx) => `
+    <label class="check">
+      <input type="checkbox" value="${esc(m.value)}" ${idx===0 ? 'checked' : ''}/>
+      <div>${esc(m.label)}</div>
+    </label>
+  `).join('') : '<div class="empty">没有可选释义，仍可用“自定义释义”收藏。</div>';
+  $('#collectCustomDef').value = '';
+  $('#collectNote').value = '';
+  openModal('collectModal');
+}
+
+async function confirmCollect(){
+  const selectedBooks = [...$('#collectBookList').querySelectorAll('input[type="checkbox"]:checked')].map(x => x.value);
+  if(!selectedBooks.length){ toast('请先选择目标单词本'); return; }
+  const selectedDefs = [...$('#collectMeaningList').querySelectorAll('input[type="checkbox"]:checked')].map(x => x.value);
+  const customDef = $('#collectCustomDef').value.trim();
+  const note = $('#collectNote').value.trim();
+  const word = state.collectWord;
+  const advancedPayload = {
+    term: word,
+    definitions: [...selectedDefs, ...(customDef ? [customDef] : [])],
+    note,
+    addedAt: new Date().toISOString()
+  };
+
+  try{
+    for(const bookId of selectedBooks){
+      const book = state.books.find(b => b.id === bookId);
+      if(!book) continue;
+      if(book.type === 'normal'){
+        await api(`/books/${encodeURIComponent(bookId)}`, {
+          method:'PUT',
+          body: JSON.stringify({action:'add-word', word})
+        });
+      }else{
+        await api(`/books/${encodeURIComponent(bookId)}`, {
+          method:'PUT',
+          body: JSON.stringify({action:'add-advanced', item: advancedPayload})
+        });
+      }
+    }
+    toast('收藏成功');
+    closeModal('collectModal');
+    await bootstrap();
+    if(state.activeBookId) await loadBook(state.activeBookId);
+  }catch(err){
+    toast('收藏失败：' + err.message, 3500);
+  }
+}
+
+function renderEditor(){
+  const b = state.activeBookData?.book;
+  if(!b){
+    $('#editorTitle').textContent = '未选择单词本';
+    $('#editorSub').textContent = '选择一个单词本后编辑其内容。';
+    $('#editorArea').innerHTML = '<div class="empty">选择单词本后开始编辑。</div>';
+    return;
+  }
+  $('#editorTitle').textContent = `编辑：${b.name}`;
+  $('#editorSub').textContent = `${b.type === 'normal' ? '普通 txt' : '高级 JSON'} · 保存后会写回 GitHub 仓库。`;
+  if(b.type === 'normal'){
+    const words = (state.activeBookData.words || []).join('\n');
+    $('#editorArea').innerHTML = `
+      <label class="note">每行一个单词</label>
+      <textarea id="normalEditor" class="textarea" placeholder="apple">${esc(words)}</textarea>
+      <div class="note" style="margin-top:8px">去重会在保存时自动处理。</div>
+    `;
+  }else{
+    const items = state.activeBookData.items || [];
+    const rows = items.map((x, idx) => renderAdvancedRow(x, idx)).join('');
+    $('#editorArea').innerHTML = `
+      <div class="list" id="advancedRows">${rows || renderAdvancedRow({term:'',definitions:[''],note:''},0)}</div>
+      <div style="height:12px"></div>
+      <button class="btn" id="addAdvancedRowInline">添加高级条目</button>
+    `;
+    $('#addAdvancedRowInline')?.addEventListener('click', addEditorRow);
+  }
+}
+
+function renderAdvancedRow(item, idx){
+  const defs = (item.definitions && item.definitions.length) ? item.definitions.join('；') : (item.definition || '');
+  return `
+    <div class="word-row advanced" data-idx="${idx}">
+      <input class="input adv-term" value="${esc(item.term || item.word || '')}" placeholder="单词或词组" />
+      <input class="input adv-defs" value="${esc(defs)}" placeholder="特定释义，多个用 ； 分隔" />
+      <input class="input adv-note" value="${esc(item.note || '')}" placeholder="笔记" />
+      <button class="btn danger adv-del">删除</button>
+    </div>
+  `;
+}
+
+function addEditorRow(){
+  const b = state.activeBookData?.book;
+  if(!b){ toast('先选择单词本'); return; }
+  if(b.type === 'normal'){
+    const ta = $('#normalEditor');
+    if(!ta){ return; }
+    ta.value += (ta.value.trim() ? '\n' : '') + '';
+    ta.focus();
+    toast('已添加空行，输入单词即可');
+  }else{
+    const container = $('#advancedRows');
+    const idx = container.children.length;
+    const temp = {term:'', definitions:[''], note:''};
+    container.insertAdjacentHTML('beforeend', renderAdvancedRow(temp, idx));
+    wireAdvancedRowEvents(container.lastElementChild);
+  }
+}
+
+function wireAdvancedRowEvents(row){
+  row.querySelector('.adv-del').addEventListener('click', ()=> {
+    row.remove();
+  });
+}
+
+function attachAdvancedRowHandlers(){
+  const container = $('#advancedRows');
+  if(!container) return;
+  [...container.children].forEach(wireAdvancedRowEvents);
+}
+document.addEventListener('click', e => {
+  if(e.target.classList.contains('adv-del')){
+    e.target.closest('.word-row')?.remove();
+  }
+});
+
+async function saveActiveBook(){
+  const book = state.activeBookData?.book;
+  if(!book){ toast('请先选择单词本'); return; }
+  try{
+    if(book.type === 'normal'){
+      const ta = $('#normalEditor');
+      const words = [...new Set((ta.value || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean))];
+      await api(`/books/${encodeURIComponent(book.id)}`, {
+        method:'PUT',
+        body: JSON.stringify({action:'save-normal', words})
+      });
+    }else{
+      const rows = [...$('#advancedRows')?.children || []].map(row => ({
+        term: row.querySelector('.adv-term')?.value.trim() || '',
+        definitions: row.querySelector('.adv-defs')?.value.split('；').map(s => s.trim()).filter(Boolean),
+        note: row.querySelector('.adv-note')?.value.trim() || '',
+      })).filter(x => x.term);
+      await api(`/books/${encodeURIComponent(book.id)}`, {
+        method:'PUT',
+        body: JSON.stringify({action:'save-advanced', items: rows})
+      });
+    }
+    toast('保存成功');
+    await bootstrap();
+    await loadBook(book.id);
+  }catch(err){
+    toast('保存失败：' + err.message, 3400);
+  }
+}
+
+async function deleteActiveBook(){
+  const book = state.activeBookData?.book;
+  if(!book){ toast('请先选择单词本'); return; }
+  if(!confirm(`确定删除单词本「${book.name}」吗？`)) return;
+  try{
+    await api(`/books/${encodeURIComponent(book.id)}`, {method:'DELETE'});
+    toast('已删除');
+    state.activeBookId = '';
+    state.activeBook = null;
+    state.activeBookData = null;
+    await bootstrap();
+  }catch(err){
+    toast('删除失败：' + err.message, 3400);
+  }
+}
+
+async function createBook(){
+  const name = $('#newBookName').value.trim();
+  const type = $('#newBookType').value;
+  const rawText = $('#newBookFile')._fileText || '';
+  const file = $('#newBookFile').files?.[0];
+  const jsonText = $('#newBookJson').value.trim();
+  if(!name) return toast('请输入单词本名称');
+  try{
+    let payload = {name, type};
+    if(type === 'normal'){
+      const text = file ? await file.text() : rawText || '';
+      payload.text = text;
+    }else{
+      if(jsonText){
+        payload.items = JSON.parse(jsonText);
+      }else{
+        payload.items = [];
+      }
+    }
+    await api('/books', {method:'POST', body: JSON.stringify(payload)});
+    $('#newBookName').value = '';
+    $('#newBookFile').value = '';
+    $('#newBookJson').value = '';
+    $('#newBookFile')._fileText = '';
+    closeModal('createModal');
+    toast('创建成功');
+    await bootstrap();
+  }catch(err){
+    toast('创建失败：' + err.message, 3500);
+  }
+}
+
+$('#studyBookSelect').addEventListener('change', e => {
+  state.studyBookId = e.target.value;
+  if(state.studyBookId) loadBook(state.studyBookId);
+});
+
+$('#saveBookBtn').addEventListener('mouseenter', attachAdvancedRowHandlers);
+document.addEventListener('input', e => {
+  if(e.target.matches('#globalSearch')) return;
+});
+
+async function loadMatchesForSearch(q){
+  return await api(`/search?q=${encodeURIComponent(q)}`);
+}
+
+async function initSearchFromHash(){
+  const q = new URLSearchParams(location.search).get('q');
+  if(q){
+    setTab('search');
+    $('#searchInput').value = q;
+    await searchWord(q);
+  }
+}
+
+bootstrap().then(initSearchFromHash);
+</script>
+</body>
+</html>
